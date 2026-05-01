@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pdftotext \"C:\\\\Users\\\\roafr\\\\Documents\\\\spectra-pools\\\\docs\\\\field-forms\\\\FS_02_Febrero 2026.pdf\" -)",
+      "Bash(pdftotext \"C:\\\\Users\\\\roafr\\\\Documents\\\\spectra-pools\\\\docs\\\\field-forms\\\\FS_03_Marzo 2026.pdf\" -)",
+      "WebSearch"
+    ]
+  }
+}
