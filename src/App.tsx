@@ -14,6 +14,10 @@ import ClientLayout from "@/layouts/ClientLayout";
 import Auth from "@/pages/Auth";
 import NotFound from "@/pages/NotFound";
 import AdminDashboard from "@/pages/admin/Dashboard";
+import AdminClients from "@/pages/admin/Clients";
+import AdminLocations from "@/pages/admin/Locations";
+import AdminTechnicians from "@/pages/admin/Technicians";
+import AdminRoutes from "@/pages/admin/Routes";
 import TechnicianDashboard from "@/pages/technician/Dashboard";
 import ClientDashboard from "@/pages/client/Dashboard";
 
@@ -52,12 +56,11 @@ const App = () => (
             }
           >
             <Route index element={<AdminDashboard />} />
-            {/* Future admin pages will be added here */}
-            <Route path="clients" element={<div className="p-6 text-muted-foreground">Clients — coming in Phase 2</div>} />
-            <Route path="locations" element={<div className="p-6 text-muted-foreground">Locations — coming in Phase 2</div>} />
-            <Route path="technicians" element={<div className="p-6 text-muted-foreground">Technicians — coming in Phase 2</div>} />
-            <Route path="routes" element={<div className="p-6 text-muted-foreground">Routes — coming in Phase 2</div>} />
-            <Route path="visits" element={<div className="p-6 text-muted-foreground">Visits — coming in Phase 2</div>} />
+            <Route path="clients" element={<AdminClients />} />
+            <Route path="locations" element={<AdminLocations />} />
+            <Route path="technicians" element={<AdminTechnicians />} />
+            <Route path="routes" element={<AdminRoutes />} />
+            <Route path="visits" element={<div className="p-6 text-muted-foreground">Visits — coming in Phase 3</div>} />
             <Route path="inventory" element={<div className="p-6 text-muted-foreground">Inventory — coming in Phase 4</div>} />
             <Route path="invoices" element={<div className="p-6 text-muted-foreground">Invoices — coming in Phase 6</div>} />
             <Route path="reports" element={<div className="p-6 text-muted-foreground">Reports — coming in Phase 6</div>} />
