@@ -641,7 +641,6 @@ const PoolAreasDialog = ({ location, open, onClose }: { location: Location; open
                         <SelectContent>
                           <SelectItem value="POOL">Pool</SelectItem>
                           <SelectItem value="SPA">Spa</SelectItem>
-                          <SelectItem value="TANK">Tank</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
@@ -712,7 +711,7 @@ const PoolAreasDialog = ({ location, open, onClose }: { location: Location; open
               </div>
 
               {/* Equipment */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-3">
                 <div className="space-y-1.5">
                   <Label>Filter Type</Label>
                   <Input {...register("filter_type")} placeholder="Sand / Cartridge / DE" />
