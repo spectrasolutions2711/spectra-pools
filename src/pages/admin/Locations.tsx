@@ -21,7 +21,11 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { MapPin, Plus, Pencil, Search, Layers } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { MapPin, Plus, Pencil, Search, Layers, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -76,6 +80,7 @@ const AdminLocations = () => {
   const [areasDialogOpen, setAreasDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Location | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Location | null>(null);
 
   const { data: clients = [] } = useQuery<Client[]>({
     queryKey: ["clients-simple"],
@@ -140,6 +145,22 @@ const AdminLocations = () => {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["locations"] }),
     onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("client_locations").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["locations"] });
+      toast.success("Location deleted");
+      setDeleteTarget(null);
+    },
+    onError: () => {
+      toast.error("Cannot delete — this location has visit history. Set it to inactive instead.");
+      setDeleteTarget(null);
+    },
   });
 
   const openCreate = () => {
@@ -271,6 +292,9 @@ const AdminLocations = () => {
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => { setSelectedLocation(loc); setAreasDialogOpen(true); }} title="Manage pool areas">
                         <Layers className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setDeleteTarget(loc)} title="Delete location">
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>
@@ -404,6 +428,27 @@ const AdminLocations = () => {
           onClose={() => setAreasDialogOpen(false)}
         />
       )}
+
+      {/* Delete Location Confirmation */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={open => { if (!open) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Location</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{deleteTarget?.name}</strong>? This will also remove all its pool areas. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
@@ -468,6 +513,7 @@ const PoolAreasDialog = ({ location, open, onClose }: { location: Location; open
   const qc = useQueryClient();
   const [editingArea, setEditingArea] = useState<PoolArea | null>(null);
   const [areaFormOpen, setAreaFormOpen] = useState(false);
+  const [deleteAreaTarget, setDeleteAreaTarget] = useState<PoolArea | null>(null);
 
   const { data: areas = [], isLoading } = useQuery<PoolArea[]>({
     queryKey: ["pool-areas", location.id],
@@ -536,6 +582,22 @@ const PoolAreasDialog = ({ location, open, onClose }: { location: Location; open
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["pool-areas", location.id] }),
     onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteArea = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("pool_areas").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["pool-areas", location.id] });
+      toast.success("Area deleted");
+      setDeleteAreaTarget(null);
+    },
+    onError: () => {
+      toast.error("Cannot delete — this area has water readings. Set it to inactive instead.");
+      setDeleteAreaTarget(null);
+    },
   });
 
   const openAreaCreate = () => {
@@ -613,12 +675,36 @@ const PoolAreasDialog = ({ location, open, onClose }: { location: Location; open
                     <Button variant="ghost" size="icon" onClick={() => openAreaEdit(area)}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
+                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setDeleteAreaTarget(area)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                 </div>
               ))}
             </div>
           )}
         </div>
+
+        {/* Delete Area Confirmation */}
+        <AlertDialog open={!!deleteAreaTarget} onOpenChange={open => { if (!open) setDeleteAreaTarget(null); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Pool Area</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete <strong>{deleteAreaTarget?.name}</strong>? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deleteAreaTarget && deleteArea.mutate(deleteAreaTarget.id)}
+                disabled={deleteArea.isPending}
+              >
+                {deleteArea.isPending ? "Deleting…" : "Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Area form sub-dialog */}
         <Dialog open={areaFormOpen} onOpenChange={setAreaFormOpen}>
