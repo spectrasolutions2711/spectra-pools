@@ -412,10 +412,31 @@ const AdminLocations = () => {
 // Pool Areas sub-dialog
 // ──────────────────────────────────────────────────────────
 
+type PoolShape = "rectangular" | "round" | "oval";
+
+const calcGallons = (shape: PoolShape, length: number, width: number, depth: number): number | null => {
+  if (!width || !depth || width <= 0 || depth <= 0) return null;
+  switch (shape) {
+    case "rectangular":
+      if (!length || length <= 0) return null;
+      return Math.round(length * width * depth * 7.5);
+    case "round":
+      return Math.round(3.14 * Math.pow(width / 2, 2) * depth * 7.5);
+    case "oval":
+      if (!length || length <= 0) return null;
+      return Math.round(length * width * 0.785 * depth * 7.5);
+    default:
+      return null;
+  }
+};
+
 const areaSchema = z.object({
   area_type: z.enum(["POOL", "SPA", "TANK"]),
   name: z.string().min(1, "Name is required"),
-  gallons: z.string().optional(),
+  shape: z.enum(["rectangular", "round", "oval"]),
+  length_ft: z.string().optional(),
+  width_ft: z.string().optional(),
+  avg_depth_ft: z.string().optional(),
   filter_type: z.string().optional(),
   system_type: z.string().optional(),
   has_heater: z.boolean().default(false),
@@ -464,18 +485,28 @@ const PoolAreasDialog = ({ location, open, onClose }: { location: Location; open
 
   const { register, handleSubmit, reset, control, watch, formState: { errors } } = useForm<AreaFormValues>({
     resolver: zodResolver(areaSchema),
-    defaultValues: { area_type: "POOL", has_heater: false },
+    defaultValues: { area_type: "POOL", shape: "rectangular", has_heater: false },
   });
 
-  const hasHeater = watch("has_heater");
+  const watchedShape = watch("shape") as PoolShape;
+  const watchedLength = parseFloat(watch("length_ft") || "0");
+  const watchedWidth = parseFloat(watch("width_ft") || "0");
+  const watchedDepth = parseFloat(watch("avg_depth_ft") || "0");
+  const computedGallons = calcGallons(watchedShape, watchedLength, watchedWidth, watchedDepth);
 
   const upsertArea = useMutation({
     mutationFn: async (values: AreaFormValues & { id?: string }) => {
+      const gallons = calcGallons(
+        values.shape as PoolShape,
+        parseFloat(values.length_ft || "0"),
+        parseFloat(values.width_ft || "0"),
+        parseFloat(values.avg_depth_ft || "0"),
+      );
       const payload = {
         location_id: location.id,
         area_type: values.area_type,
         name: values.name,
-        gallons: values.gallons ? parseInt(values.gallons) : null,
+        gallons,
         filter_type: values.filter_type || null,
         system_type: values.system_type || null,
         has_heater: values.has_heater,
@@ -509,7 +540,7 @@ const PoolAreasDialog = ({ location, open, onClose }: { location: Location; open
 
   const openAreaCreate = () => {
     setEditingArea(null);
-    reset({ area_type: "POOL", name: "", gallons: "", filter_type: "", system_type: "", has_heater: false, notes: "" });
+    reset({ area_type: "POOL", shape: "rectangular", name: "", length_ft: "", width_ft: "", avg_depth_ft: "", filter_type: "", system_type: "", has_heater: false, notes: "" });
     setAreaFormOpen(true);
   };
 
@@ -517,8 +548,11 @@ const PoolAreasDialog = ({ location, open, onClose }: { location: Location; open
     setEditingArea(area);
     reset({
       area_type: area.area_type,
+      shape: "rectangular",
       name: area.name,
-      gallons: area.gallons ? String(area.gallons) : "",
+      length_ft: "",
+      width_ft: "",
+      avg_depth_ft: "",
       filter_type: area.filter_type || "",
       system_type: area.system_type || "",
       has_heater: area.has_heater,
@@ -593,6 +627,8 @@ const PoolAreasDialog = ({ location, open, onClose }: { location: Location; open
               <DialogTitle>{editingArea ? "Edit Pool Area" : "Add Pool Area"}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit(v => upsertArea.mutate({ ...v, id: editingArea?.id }))} className="space-y-4">
+
+              {/* Type + Name */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label>Type *</Label>
@@ -618,20 +654,73 @@ const PoolAreasDialog = ({ location, open, onClose }: { location: Location; open
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label>Gallons</Label>
-                  <Input {...register("gallons")} placeholder="75000" type="number" />
+              {/* Shape selector */}
+              <div className="space-y-1.5">
+                <Label>Shape</Label>
+                <Controller
+                  name="shape"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="rectangular">Rectangular — L × W × D × 7.5</SelectItem>
+                        <SelectItem value="round">Round — π × r² × D × 7.5</SelectItem>
+                        <SelectItem value="oval">Oval — L × W × 0.785 × D × 7.5</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+
+              {/* Dimensions */}
+              <div className="rounded-lg border border-dashed p-3 space-y-3 bg-muted/30">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Dimensions (feet)</p>
+                <div className="grid grid-cols-3 gap-3">
+                  {watchedShape !== "round" && (
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Length (ft)</Label>
+                      <Input {...register("length_ft")} type="number" step="0.1" placeholder="75" />
+                    </div>
+                  )}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">
+                      {watchedShape === "round" ? "Diameter (ft)" : "Width (ft)"}
+                    </Label>
+                    <Input {...register("width_ft")} type="number" step="0.1" placeholder="45" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Avg Depth (ft)</Label>
+                    <Input {...register("avg_depth_ft")} type="number" step="0.1" placeholder="5" />
+                  </div>
                 </div>
+
+                {/* Calculated gallons */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Capacity (gallons) — calculated</Label>
+                  <div className={`flex h-9 w-full items-center rounded-md border px-3 text-sm font-semibold
+                    ${computedGallons ? "border-primary/40 bg-primary/5 text-primary" : "border-input bg-muted text-muted-foreground"}`}>
+                    {computedGallons ? computedGallons.toLocaleString() + " gal" : "Enter dimensions above"}
+                  </div>
+                </div>
+
+                {editingArea?.gallons && !computedGallons && (
+                  <p className="text-xs text-muted-foreground">
+                    Current stored value: <strong>{editingArea.gallons.toLocaleString()} gal</strong>. Re-enter dimensions to recalculate.
+                  </p>
+                )}
+              </div>
+
+              {/* Equipment */}
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label>Filter Type</Label>
                   <Input {...register("filter_type")} placeholder="Sand / Cartridge / DE" />
                 </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label>System Type</Label>
-                <Input {...register("system_type")} placeholder="Salt / Chlorine / UV" />
+                <div className="space-y-1.5">
+                  <Label>System Type</Label>
+                  <Input {...register("system_type")} placeholder="Salt / Chlorine / UV" />
+                </div>
               </div>
 
               <div className="flex items-center gap-3">
