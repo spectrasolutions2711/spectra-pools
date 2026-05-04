@@ -18,6 +18,7 @@ import AdminClients from "@/pages/admin/Clients";
 import AdminLocations from "@/pages/admin/Locations";
 import AdminTechnicians from "@/pages/admin/Technicians";
 import AdminRoutes from "@/pages/admin/Routes";
+import AdminInventory from "@/pages/admin/Inventory";
 import TechnicianDashboard from "@/pages/technician/Dashboard";
 import TechnicianVisit from "@/pages/technician/Visit";
 import TechnicianHistory from "@/pages/technician/History";
@@ -63,7 +64,7 @@ const App = () => (
             <Route path="technicians" element={<AdminTechnicians />} />
             <Route path="routes" element={<AdminRoutes />} />
             <Route path="visits" element={<div className="p-6 text-muted-foreground">Visits — coming in Phase 3</div>} />
-            <Route path="inventory" element={<div className="p-6 text-muted-foreground">Inventory — coming in Phase 4</div>} />
+            <Route path="inventory" element={<AdminInventory />} />
             <Route path="invoices" element={<div className="p-6 text-muted-foreground">Invoices — coming in Phase 6</div>} />
             <Route path="reports" element={<div className="p-6 text-muted-foreground">Reports — coming in Phase 6</div>} />
             <Route path="settings" element={<div className="p-6 text-muted-foreground">Settings — coming soon</div>} />
