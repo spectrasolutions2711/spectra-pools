@@ -19,10 +19,13 @@ import AdminLocations from "@/pages/admin/Locations";
 import AdminTechnicians from "@/pages/admin/Technicians";
 import AdminRoutes from "@/pages/admin/Routes";
 import AdminInventory from "@/pages/admin/Inventory";
+import AdminInvoices from "@/pages/admin/Invoices";
 import TechnicianDashboard from "@/pages/technician/Dashboard";
 import TechnicianVisit from "@/pages/technician/Visit";
 import TechnicianHistory from "@/pages/technician/History";
 import ClientDashboard from "@/pages/client/Dashboard";
+import ClientHistory from "@/pages/client/History";
+import ClientReports from "@/pages/client/Reports";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 1000 * 60 * 5 } },
@@ -65,7 +68,7 @@ const App = () => (
             <Route path="routes" element={<AdminRoutes />} />
             <Route path="visits" element={<div className="p-6 text-muted-foreground">Visits — coming in Phase 3</div>} />
             <Route path="inventory" element={<AdminInventory />} />
-            <Route path="invoices" element={<div className="p-6 text-muted-foreground">Invoices — coming in Phase 6</div>} />
+            <Route path="invoices" element={<AdminInvoices />} />
             <Route path="reports" element={<div className="p-6 text-muted-foreground">Reports — coming in Phase 6</div>} />
             <Route path="settings" element={<div className="p-6 text-muted-foreground">Settings — coming soon</div>} />
           </Route>
@@ -103,8 +106,8 @@ const App = () => (
             }
           >
             <Route index element={<ClientDashboard />} />
-            <Route path="history" element={<div className="text-muted-foreground">Visit History — coming in Phase 5</div>} />
-            <Route path="reports" element={<div className="text-muted-foreground">Reports — coming in Phase 5</div>} />
+            <Route path="history" element={<ClientHistory />} />
+            <Route path="reports" element={<ClientReports />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
