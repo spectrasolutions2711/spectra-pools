@@ -120,7 +120,16 @@ const AdminTechnicians = () => {
       setInviteOpen(false);
       inviteForm.reset();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => {
+      const msg = e.message || "";
+      if (msg.toLowerCase().includes("after") && msg.toLowerCase().includes("seconds")) {
+        toast.error("Supabase rate limit — wait 60 seconds between invitations, then try again.");
+      } else if (msg.toLowerCase().includes("already registered") || msg.toLowerCase().includes("already been registered")) {
+        toast.error("That email already has an account. Ask the technician to log in.");
+      } else {
+        toast.error(msg);
+      }
+    },
   });
 
   const editMutation = useMutation({
@@ -256,7 +265,7 @@ const AdminTechnicians = () => {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              After confirming their email, the technician should use "Forgot Password" to set their own password.
+              Supabase allows 1 invite per email per minute. If you see a rate-limit error, wait 60 seconds and retry. The technician uses "Forgot Password" to set their own password after confirming their email.
             </AlertDescription>
           </Alert>
           <form onSubmit={inviteForm.handleSubmit(v => inviteMutation.mutate(v))} className="space-y-4">
