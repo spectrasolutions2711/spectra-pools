@@ -19,6 +19,8 @@ import AdminLocations from "@/pages/admin/Locations";
 import AdminTechnicians from "@/pages/admin/Technicians";
 import AdminRoutes from "@/pages/admin/Routes";
 import TechnicianDashboard from "@/pages/technician/Dashboard";
+import TechnicianVisit from "@/pages/technician/Visit";
+import TechnicianHistory from "@/pages/technician/History";
 import ClientDashboard from "@/pages/client/Dashboard";
 
 const queryClient = new QueryClient({
@@ -67,7 +69,17 @@ const App = () => (
             <Route path="settings" element={<div className="p-6 text-muted-foreground">Settings — coming soon</div>} />
           </Route>
 
-          {/* Technician routes */}
+          {/* Technician visit — full-screen, no layout shell */}
+          <Route
+            path="/technician/visit/:visitId"
+            element={
+              <ProtectedRoute allowedRoles={["technician"]}>
+                <TechnicianVisit />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Technician routes — with layout */}
           <Route
             path="/technician"
             element={
@@ -77,7 +89,7 @@ const App = () => (
             }
           >
             <Route index element={<TechnicianDashboard />} />
-            <Route path="history" element={<div className="p-4 text-muted-foreground">Visit History — coming in Phase 3</div>} />
+            <Route path="history" element={<TechnicianHistory />} />
           </Route>
 
           {/* Client routes */}
